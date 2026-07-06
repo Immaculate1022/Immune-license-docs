@@ -34,6 +34,9 @@ Result: Patient Zero loses files. Patient Two loses nothing.
 
 ## Components
 
+### IOF Resonance Visualization
+A web-based dashboard (`index.html` & `IOF_Resonance_Complete.jsx`) providing a real-time, physics-driven visualization of topological manifold resonance and signal integrity.
+
 ### IOF v3 Dashboard (Station 2)
 The repository includes `IOFv3Dashboard.jsx`, a high-fidelity React component for monitoring flux, latency, and system resonance.
 
@@ -49,6 +52,8 @@ A technical document (`docs/CosmologicalBridge.md`) exploring the Infinite Optic
 │   ├── AHRengine.pdf
 │   ├── CosmologicalBridge.md
 │   └── Immunelicense.pdf
+├── index.html              # IOF Resonance Web Visualization (Entry)
+├── IOF_Resonance_Complete.jsx # IOF Resonance Dashboard (React)
 ├── IOFv3Dashboard.jsx      # Station 2 Flux Dashboard (React)
 ├── LICENSE                 # Apache 2.0 License
 ├── README.md               # Project overview and quickstart
