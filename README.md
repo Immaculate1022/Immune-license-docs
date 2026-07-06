@@ -35,10 +35,10 @@ Result: Patient Zero loses files. Patient Two loses nothing.
 ## Components
 
 ### IOF v3 Dashboard (Station 2)
-The repository includes `IOFv3Dashboard.jsx`, a high-fidelity React component for monitoring flux, latency, and system resonance. It features:
-- **Flux Engine**: Real-time physics-based state monitoring.
-- **Palindrome Buffer**: Mirror memory for tracking system deltas.
-- **Resonance Detection**: Visualizes global containment status.
+The repository includes `IOFv3Dashboard.jsx`, a high-fidelity React component for monitoring flux, latency, and system resonance.
+
+### The Cosmological Bridge
+A technical document (`docs/CosmologicalBridge.md`) exploring the Infinite Optical Fabric as an implementation of cosmic principles, mapping galactic architecture to TFLN-based engineering.
 
 ## Project Structure
 
@@ -47,6 +47,7 @@ The repository includes `IOFv3Dashboard.jsx`, a high-fidelity React component fo
 ├── docs/                   # Technical documentation and licenses
 │   ├── AHR.pdf
 │   ├── AHRengine.pdf
+│   ├── CosmologicalBridge.md
 │   └── Immunelicense.pdf
 ├── IOFv3Dashboard.jsx      # Station 2 Flux Dashboard (React)
 ├── LICENSE                 # Apache 2.0 License
