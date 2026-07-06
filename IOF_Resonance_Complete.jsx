@@ -8,182 +8,174 @@
 const { useState, useEffect, useRef, useMemo } = React;
 
 // ─────────────────────────────────────────────
-//  CORE PHYSICS ENGINE (Flux & Resonance)
+//  TOPOLOGICAL MEMORY & REASONING
 // ─────────────────────────────────────────────
-class ResonanceEngine {
-  constructor() {
-    this.state = {
-      integrity: 0.987,
-      latency: 12,
-      resonance: 0.85,
-      throughput: 2340,
-      nodes: Array.from({ length: 40 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        phase: Math.random() * Math.PI * 2,
-        frequency: 0.5 + Math.random() * 2
-      }))
+
+class TopologicalMemoryBank {
+  constructor(maxEntries = 50) {
+    this.states = [];
+    this.maxEntries = maxEntries;
+  }
+
+  record(arch, photonic, step) {
+    const entry = {
+      phi: arch.mobius_phi,
+      q: photonic.qFactor,
+      step: step,
+      isPeak: photonic.resonance > 0.9
     };
-    this.subscribers = [];
-    this.running = false;
-    this.lastTime = performance.now();
+    this.states.push(entry);
+    if (this.states.length > this.maxEntries) this.states.shift();
   }
 
-  subscribe(fn) {
-    this.subscribers.push(fn);
-    return () => { this.subscribers = this.subscribers.filter(s => s !== fn); };
+  findNearbyPeak(currentPhi, threshold = 0.15) {
+    if (this.states.length === 0) return null;
+    const candidates = this.states.filter(s => Math.abs(s.phi - currentPhi) < threshold);
+    if (candidates.length === 0) return null;
+    return candidates.reduce((best, curr) => curr.q > best.q ? curr : best);
   }
-
-  notify() {
-    this.subscribers.forEach(fn => fn({ ...this.state }));
-  }
-
-  start() {
-    this.running = true;
-    this.loop();
-  }
-
-  stop() { this.running = false; }
-
-  loop = () => {
-    if (!this.running) return;
-    const now = performance.now();
-    const dt = (now - this.lastTime) / 1000;
-    this.lastTime = now;
-
-    // Simulate physics
-    this.state.resonance = 0.8 + Math.sin(now / 2000) * 0.15;
-    this.state.latency = 10 + Math.random() * 5;
-    this.state.throughput = 2300 + Math.random() * 100;
-    
-    this.state.nodes.forEach(node => {
-      node.phase += node.frequency * dt;
-    });
-
-    this.notify();
-    requestAnimationFrame(this.loop);
-  };
 }
 
+const MESH_POS = Array.from({ length: 40 }, (_, i) => ({
+  id: i,
+  x: Math.random(),
+  y: Math.random()
+}));
+
 // ─────────────────────────────────────────────
-//  UI COMPONENTS
+//  VISUALIZATION COMPONENTS
 // ─────────────────────────────────────────────
 
-const NodeVisualizer = ({ nodes, resonance }) => {
-  return (
-    <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', opacity: 0.6 }}>
-      {nodes.map(node => (
-        <circle
-          key={node.id}
-          cx={node.x}
-          cy={node.y}
-          r={0.5 + Math.sin(node.phase) * 0.5}
-          fill={resonance > 0.9 ? "#00FFD1" : "#A78BFA"}
-          style={{ transition: 'fill 0.5s' }}
-        />
-      ))}
-      {/* Connections */}
-      {nodes.slice(0, 15).map((node, i) => {
-        const next = nodes[(i + 1) % 15];
-        return (
-          <line
-            key={i}
-            x1={node.x}
-            y1={node.y}
-            x2={next.x}
-            y2={next.y}
-            stroke="#ffffff11"
-            strokeWidth="0.1"
-          />
-        );
-      })}
-    </svg>
-  );
+const AcousticTopography = ({ nodes, currentPhi, targetPhi }) => {
+  const canvasRef = useRef();
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const w = 600, h = 300;
+    canvas.width = w; canvas.height = h;
+
+    const getHeightAt = (x, y) => {
+      let hVal = 0;
+      MESH_POS.forEach(pos => {
+        const node = nodes[pos.id] || { localError: 0 };
+        const dx = (x / w) - pos.x;
+        const dy = (y / h) - pos.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        hVal += Math.abs(node.localError) * Math.exp(-dist * 10) * 150;
+      });
+      return hVal + Math.sin(x * 0.05) * 5;
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+      for (let y = 0; y < h; y += 4) {
+        for (let x = 0; x < w; x += 4) {
+          const height = getHeightAt(x, y);
+          ctx.fillStyle = `hsl(${200 + height}, 70%, ${20 + height/5}%)`;
+          ctx.fillRect(x, y, 4, 4);
+        }
+      }
+
+      // Current position
+      ctx.beginPath();
+      ctx.arc(currentPhi * w, h/2, 8, 0, Math.PI * 2);
+      ctx.strokeStyle = '#00FFD1';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Ascent Path
+      if (targetPhi) {
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(currentPhi * w, h/2);
+        ctx.lineTo(targetPhi * w, h/2 - 20);
+        ctx.strokeStyle = '#A78BFA';
+        ctx.stroke();
+      }
+    };
+
+    draw();
+  }, [nodes, currentPhi, targetPhi]);
+
+  return <canvas ref={canvasRef} style={{ width: '100%', height: '300px', borderRadius: '8px' }} />;
 };
 
 function App() {
-  const engineRef = useRef(new ResonanceEngine());
-  const [data, setData] = useState(engineRef.current.state);
+  const [step, setStep] = useState(0);
+  const [memory] = useState(new TopologicalMemoryBank());
+  const [arch, setArch] = useState({ mobius_phi: 0.5 });
+  const [photonic, setPhotonic] = useState({ resonance: 0.5, qFactor: 5e7, integrity: 0.98 });
+  const [nodes, setNodes] = useState({});
+  const [ascent, setAscent] = useState(null);
 
   useEffect(() => {
-    const unsubscribe = engineRef.current.subscribe(setData);
-    engineRef.current.start();
-    return () => {
-      unsubscribe();
-      engineRef.current.stop();
-    };
-  }, []);
+    const timer = setInterval(() => {
+      setStep(s => s + 1);
+      const newRes = 0.4 + Math.random() * 0.5;
+      const newPhotonic = { resonance: newRes, qFactor: newRes * 1e8, integrity: 0.95 + Math.random() * 0.04 };
+      setPhotonic(newPhotonic);
+      
+      const newNodes = {};
+      MESH_POS.forEach(p => {
+        newNodes[p.id] = { localError: Math.sin(step * 0.1 + p.id) * 0.5 };
+      });
+      setNodes(newNodes);
+
+      memory.record(arch, newPhotonic, step);
+
+      // Ascent Logic
+      const peak = memory.findNearbyPeak(arch.mobius_phi);
+      if (peak && peak.q > newPhotonic.qFactor * 1.1) {
+        setAscent({ to: peak.phi, q: peak.q });
+        setArch({ mobius_phi: peak.phi });
+      } else {
+        setAscent(null);
+      }
+    }, 200);
+    return () => clearInterval(timer);
+  }, [step, arch]);
 
   return (
-    <div style={{ padding: '40px', height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ borderBottom: '1px solid #ffffff22', paddingBottom: '20px', marginBottom: '40px' }}>
-        <h1 style={{ fontSize: '24px', letterSpacing: '8px', color: '#fff' }}>
-          IOF RESONANCE <span style={{ color: '#A78BFA', fontSize: '12px' }}>V4.0 ENTERPRISE</span>
-        </h1>
-        <div style={{ fontSize: '10px', color: '#ffffff44', marginTop: '5px' }}>
-          COSMOLOGICAL BRIDGE ACTIVE // STATUS: SYNCHRONIZED
-        </div>
+    <div style={{ padding: '40px', color: '#fff' }}>
+      <header style={{ marginBottom: '40px' }}>
+        <h1 style={{ letterSpacing: '4px', color: '#A78BFA' }}>IOF RESONANCE // TOPOGRAPHIC ASCENT</h1>
+        <div style={{ fontSize: '10px', opacity: 0.4 }}>CLIMBING THE RESONANCE MOUNTAINS</div>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '40px', flex: 1 }}>
-        <main style={{ position: 'relative', background: '#ffffff03', borderRadius: '12px', border: '1px solid #ffffff08' }}>
-          <div style={{ position: 'absolute', top: '20px', left: '20px', z: 10 }}>
-            <div style={{ fontSize: '10px', color: '#ffffff44' }}>TOPOLOGICAL MANIFOLD VIEW</div>
-            <div style={{ fontSize: '20px', color: '#00FFD1' }}>RESONANCE: {(data.resonance * 100).toFixed(2)}%</div>
-          </div>
-          <NodeVisualizer nodes={data.nodes} resonance={data.resonance} />
-        </main>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '40px' }}>
+        <section>
+          <AcousticTopography nodes={nodes} currentPhi={arch.mobius_phi} targetPhi={ascent?.to} />
+          {ascent && (
+            <div style={{ marginTop: '20px', padding: '15px', background: '#00FFD111', border: '1px solid #00FFD144', borderRadius: '8px' }}>
+              <div style={{ fontSize: '12px', color: '#00FFD1' }}>🏔️ TOPOGRAPHIC ASCENT ACTIVE</div>
+              <div style={{ fontSize: '10px', opacity: 0.6 }}>Navigating toward peak at φ={ascent.to.toFixed(4)} (Q={ascent.q.toExponential(2)})</div>
+            </div>
+          )}
+        </section>
 
         <aside style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={statBoxStyle}>
-            <div style={labelStyle}>SIGNAL INTEGRITY</div>
-            <div style={valueStyle}>{(data.integrity * 100).toFixed(3)}%</div>
+          <div style={statStyle}>
+            <div style={labelStyle}>RESONANCE</div>
+            <div style={valueStyle}>{(photonic.resonance * 100).toFixed(2)}%</div>
           </div>
-          <div style={statBoxStyle}>
-            <div style={labelStyle}>TELEMETRY LATENCY</div>
-            <div style={valueStyle}>{data.latency.toFixed(1)}ms</div>
+          <div style={statStyle}>
+            <div style={labelStyle}>Q-FACTOR</div>
+            <div style={valueStyle}>{photonic.qFactor.toExponential(2)}</div>
           </div>
-          <div style={statBoxStyle}>
-            <div style={labelStyle}>THROUGHPUT</div>
-            <div style={valueStyle}>{data.throughput.toFixed(0)} PPS</div>
-          </div>
-
-          <div style={{ marginTop: 'auto', padding: '20px', background: '#A78BFA11', borderRadius: '8px', border: '1px solid #A78BFA22' }}>
-            <div style={{ fontSize: '10px', color: '#A78BFA', fontWeight: 'bold', marginBottom: '10px' }}>AI PREDICTION</div>
-            <div style={{ fontSize: '12px', lineHeight: '1.6', fontStyle: 'italic' }}>
-              "Topology remains stable. No terminal dissipation detected in the C-band window."
-            </div>
+          <div style={statStyle}>
+            <div style={labelStyle}>PEAKS DETECTED</div>
+            <div style={valueStyle}>{memory.states.filter(s => s.isPeak).length}</div>
           </div>
         </aside>
       </div>
-
-      <footer style={{ marginTop: '40px', fontSize: '10px', color: '#ffffff22', textAlign: 'center' }}>
-        &infin; INFINITE OPTICAL FABRIC // SECURE &bull; ETHICAL &bull; OPEN &bull; PEACEFUL
-      </footer>
     </div>
   );
 }
 
-const statBoxStyle = {
-  background: '#ffffff05',
-  padding: '20px',
-  borderRadius: '8px',
-  border: '1px solid #ffffff08'
-};
-
-const labelStyle = {
-  fontSize: '10px',
-  color: '#ffffff44',
-  marginBottom: '8px',
-  letterSpacing: '1px'
-};
-
-const valueStyle = {
-  fontSize: '24px',
-  color: '#fff',
-  fontWeight: 'bold'
-};
+const statStyle = { background: '#ffffff05', padding: '20px', borderRadius: '8px', border: '1px solid #ffffff11' };
+const labelStyle = { fontSize: '10px', opacity: 0.4, marginBottom: '5px' };
+const valueStyle = { fontSize: '20px', fontWeight: 'bold' };
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
