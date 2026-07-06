@@ -43,6 +43,9 @@ The repository includes `IOFv3Dashboard.jsx`, a high-fidelity React component fo
 ### The Cosmological Bridge
 A technical document (`docs/CosmologicalBridge.md`) exploring the Infinite Optical Fabric as an implementation of cosmic principles, mapping galactic architecture to TFLN-based engineering.
 
+### Executive White Paper
+A conceptual brief (`docs/ExecutiveWhitePaper.md`) for investors and engineers, outlining the shift from dissipative logic to topological mode convergence and the solution to the "AI Power Wall."
+
 ## Project Structure
 
 ```text
@@ -51,6 +54,7 @@ A technical document (`docs/CosmologicalBridge.md`) exploring the Infinite Optic
 │   ├── AHR.pdf
 │   ├── AHRengine.pdf
 │   ├── CosmologicalBridge.md
+│   ├── ExecutiveWhitePaper.md
 │   └── Immunelicense.pdf
 ├── index.html              # IOF Resonance Web Visualization (Entry)
 ├── IOF_Resonance_Complete.jsx # IOF Resonance Dashboard (React)
