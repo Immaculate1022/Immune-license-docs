@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forensic Telemetry System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-deep: #0a0f1c;
+            --card-bg: #161e2e;
+            --teal: #00f5ff;
+            --green: #00ff9d;
+            --red: #ff4d4d;
+            --text-dim: #94a3b8;
+            --text-bright: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-bright);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Header & Interaction */
+        header {
+            padding: 2.5rem 1rem;
+            text-align: center;
+            user-select: none;
+            cursor: crosshair;
+            border-bottom: 1px solid rgba(0, 245, 255, 0.1);
+        }
+
+        h1 { color: var(--teal); font-size: 2rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-dim); font-size: 0.9rem; opacity: 0.8; }
+
+        /* Banner */
+        .info-banner {
+            background: rgba(0, 245, 255, 0.03);
+            border: 1px solid rgba(0, 245, 255, 0.15);
+            margin: 1.5rem auto;
+            padding: 0.8rem 1.2rem;
+            border-radius: 6px;
+            width: 90%;
+            max-width: 1100px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-dim);
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+            width: 90%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.8rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.03);
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .card-label { color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 1px; }
+        .card-value { font-size: 2.8rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            margin-left: 10px;
+            vertical-align: middle;
+            text-transform: uppercase;
+        }
+        .badge-green { background: rgba(0, 255, 157, 0.15); color: var(--green); border: 1px solid rgba(0, 255, 157, 0.3); }
+        .badge-teal { background: rgba(0, 245, 255, 0.15); color: var(--teal); border: 1px solid rgba(0, 245, 255, 0.3); }
+
+        /* Chart Section */
+        .chart-container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 2rem auto;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.03);
+            height: 350px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 2rem 0 4rem 0;
+        }
+
+        button {
+            padding: 0.9rem 2rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-capture { background: var(--teal); color: var(--bg-deep); box-shadow: 0 0 20px rgba(0, 245, 255, 0.2); }
+        .btn-capture:hover { background: #fff; transform: translateY(-2px); }
+
+        .btn-simulate { background: transparent; border: 1px solid var(--red); color: var(--red); }
+        .btn-simulate:hover { background: var(--red); color: white; }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 15, 28, 0.95);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 95%;
+            max-width: 700px;
+            max-height: 85vh;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .log-box { flex-grow: 1; overflow-y: auto; padding: 1.5rem; font-family: 'Courier New', monospace; font-size: 0.8rem; color: #cbd5e1; }
+        .log-entry { margin-bottom: 8px; border-left: 2px solid var(--teal); padding-left: 10px; }
+
+        /* Toasts */
+        #toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--teal);
+            color: var(--bg-deep);
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            z-index: 2000;
+            display: none;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+
+        /* Footer */
+        footer {
+            margin-top: auto;
+            padding: 2rem;
+            background: rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .session-timer { color: var(--red); font-weight: bold; font-family: monospace; margin-bottom: 0.5rem; font-size: 1rem; }
+
+        @media (max-width: 768px) {
+            .metrics-grid { grid-template-columns: 1fr; }
+            .controls { flex-direction: column; align-items: center; width: 90%; margin: 2rem auto; }
+            button { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header id="triggerHeader">
+        <h1>Forensic Telemetry System</h1>
+        <p class="subtitle">Session-Bound Incident Analysis & Evidence Capture</p>
+    </header>
+
+    <div class="info-banner">
+        <span>🛡️</span> 
+        <span>Persistence enabled via localStorage. Data auto-purges on session expiry or manual wipe. Zero server interaction.</span>
+    </div>
+
+    <div class="metrics-grid">
+        <div class="card">
+            <p class="card-label">System Load</p>
+            <span class="card-value" id="loadVal">--</span>
+            <span class="badge badge-green">Normal</span>
+        </div>
+        <div class="card">
+            <p class="card-label">Anomaly Detection</p>
+            <span class="card-value" id="anomalyVal">--</span><span style="color:var(--teal)">%</span>
+            <span id="anomalyStatus" class="badge badge-teal">Nominal</span>
+        </div>
+        <div class="card">
+            <p class="card-label">Operational State</p>
+            <span class="card-value" id="stateVal" style="font-size: 1.8rem;">NORMAL</span>
+        </div>
+    </div>
+
+    <div class="chart-container" id="chartWrapper">
+        <canvas id="telemetryChart"></canvas>
+    </div>
+
+    <div class="controls">
+        <button class="btn-capture" onclick="captureEvidence()">Capture Evidence</button>
+        <button class="btn-simulate" onclick="simulateAnomaly()">Simulate Anomaly</button>
+    </div>
+
+    <footer>
+        <div class="session-timer" id="timerDisplay">Session Expiry: --:--</div>
+        <div style="font-size: 0.7rem; color: var(--text-dim);">SYSTEM_ID: LOCAL_BOUND // INTEGRITY_ACTIVE // NO_UPLOADS</div>
+    </footer>
+
+    <div id="logModal" class="modal" onclick="this.style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Forensic Log Stream</h3>
+                <button onclick="clearAllData()" style="background: var(--red); color: white; padding: 5px 10px; font-size: 10px;">Wipe All Data</button>
+            </div>
+            <div class="log-box" id="logStream"></div>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="modal" onclick="this.style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()" style="padding: 2rem;">
+            <h3 style="margin-bottom: 1.5rem; color: var(--teal);">System Configuration</h3>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 10px; font-size: 0.8rem;">Session Duration: <span id="durationLabel">30</span> min</label>
+                <input type="range" id="expirySlider" min="15" max="60" value="30" style="width: 100%; accent-color: var(--teal);">
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+                <span>Show Live Chart Visualization</span>
+                <input type="checkbox" id="chartToggle" checked onchange="toggleChart(this.checked)">
+            </div>
+            <button onclick="document.getElementById('settingsModal').style.display='none'" style="background: var(--teal); color: var(--bg-deep); width: 100%;">Save & Close</button>
+        </div>
+    </div>
+
+    <div id="toast">Message</div>
+
+    <script>
+        let state = {
+            logs: JSON.parse(localStorage.getItem('forensic_logs')) || [],
+            history: JSON.parse(localStorage.getItem('forensic_history')) || { load: [], anomaly: [], labels: [] },
+            expiry: parseInt(localStorage.getItem('forensic_expiry')) || (30 * 60),
+            startTime: parseInt(localStorage.getItem('forensic_start')) || Date.now(),
+            isSimulating: false,
+            settings: JSON.parse(localStorage.getItem('forensic_settings')) || { showChart: true, duration: 30 }
+        };
+
+        let chart;
+        const ctx = document.getElementById('telemetryChart').getContext('2d');
+
+        // Initialize App
+        function init() {
+            initChart();
+            startUpdateLoop();
+            startTimer();
+            renderLogs();
+            setupInteractions();
+            applySettings();
+            
+            if(state.logs.length === 0) addLog("System Kernel Initialized", "BOOT_OK", 0);
+        }
+
+        function applySettings() {
+            document.getElementById('expirySlider').value = state.settings.duration;
+            document.getElementById('durationLabel').innerText = state.settings.duration;
+            document.getElementById('chartToggle').checked = state.settings.showChart;
+            toggleChart(state.settings.showChart);
+        }
+
+        function initChart() {
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: state.history.labels,
+                    datasets: [{
+                        label: 'System Load',
+                        data: state.history.load,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }, {
+                        label: 'Anomaly %',
+                        data: state.history.anomaly,
+                        borderColor: '#00f5ff',
+                        backgroundColor: 'rgba(0, 245, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { display: false }
+                    },
+                    plugins: { legend: { labels: { color: '#94a3b8', font: { weight: 'bold' } } } }
+                }
+            });
+        }
+
+        function startUpdateLoop() {
+            setInterval(() => {
+                if(state.isSimulating) return;
+
+                const load = Math.floor(Math.random() * 21) + 15;
+                const anomaly = Math.floor(Math.random() * 11) + 5;
+                updateMetrics(load, anomaly);
+            }, 5000);
+        }
+
+        function updateMetrics(load, anomaly) {
+            document.getElementById('loadVal').innerText = load;
+            document.getElementById('anomalyVal').innerText = anomaly;
+
+            const now = new Date().toLocaleTimeString();
+            state.history.labels.push(now);
+            state.history.load.push(load);
+            state.history.anomaly.push(anomaly);
+
+            if(state.history.labels.length > 30) {
+                state.history.labels.shift();
+                state.history.load.shift();
+                state.history.anomaly.shift();
+            }
+
+            chart.update('none');
+            localStorage.setItem('forensic_history', JSON.stringify(state.history));
+        }
+
+        function addLog(event, status, val) {
+            const entry = { time: new Date().toLocaleTimeString(), event, status, val };
+            state.logs.unshift(entry);
+            if(state.logs.length > 50) state.logs.pop();
+            localStorage.setItem('forensic_logs', JSON.stringify(state.logs));
+            renderLogs();
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('logStream');
+            container.innerHTML = state.logs.map(l => `
+                <div class="log-entry">
+                    <span style="color:var(--text-dim)">[${l.time}]</span> 
+                    <strong style="color:var(--teal)">${l.event}</strong> 
+                    — <span style="color:${l.status.includes('Alert') ? 'var(--red)' : 'var(--green)'}">${l.status}</span> 
+                    (val: ${l.val})
+                </div>
+            `).join('');
+        }
+
+        async function captureEvidence() {
+            showToast("Calculating integrity hash...");
+            
+            const payload = {
+                metadata: {
+                    system: "Forensic Telemetry v2.0",
+                    timestamp: new Date().toISOString(),
+                    chainOfCustody: Date.now()
+                },
+                metrics: {
+                    load: document.getElementById('loadVal').innerText,
+                    anomaly: document.getElementById('anomalyVal').innerText,
+                    state: document.getElementById('stateVal').innerText
+                },
+                logs: state.logs.slice(0, 30),
+                chartHistory: state.history
+            };
+
+            // SHA-256 Hash
+            const msgUint8 = new TextEncoder().encode(JSON.stringify(payload));
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            payload.sha256_integrity = hashHex;
+
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `forensic-evidence-${Date.now()}.json`;
+            a.click();
+            
+            showToast("Integrity hash generated & embedded");
+            addLog("Evidence Exported", "SHA256_SIGNED", hashHex.substring(0, 8));
+        }
+
+        function simulateAnomaly() {
+            if(state.isSimulating) return;
+            state.isSimulating = true;
+            
+            document.getElementById('stateVal').innerText = "INVESTIGATING";
+            document.getElementById('stateVal').style.color = "var(--red)";
+            document.getElementById('anomalyVal').innerText = "45";
+            document.getElementById('anomalyVal').style.color = "var(--red)";
+            
+            updateMetrics(35, 45);
+            addLog("Security Anomaly Spike", "Alert_Critical", 45);
+
+            setTimeout(() => {
+                state.isSimulating = false;
+                document.getElementById('stateVal').innerText = "NORMAL";
+                document.getElementById('stateVal').style.color = "white";
+                document.getElementById('anomalyVal').style.color = "white";
+                addLog("Recovery Protocol", "Auto_Stabilized", "Nominal");
+            }, 10000);
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+                const remaining = (state.settings.duration * 60) - elapsed;
+
+                if (remaining <= 0) {
+                    clearAllData();
+                    alert("Session expired — all local data wiped for privacy.");
+                    location.reload();
+                }
+
+                if (remaining === 60) showToast("⚠️ Session expires in 60 seconds");
+
+                const m = Math.floor(remaining / 60);
+                const s = remaining % 60;
+                document.getElementById('timerDisplay').innerText = `Session Expiry: ${m}:${s < 10 ? '0'+s : s}`;
+            }, 1000);
+        }
+
+        function clearAllData() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        function toggleChart(visible) {
+            document.getElementById('chartWrapper').style.display = visible ? 'block' : 'none';
+            state.settings.showChart = visible;
+            localStorage.setItem('forensic_settings', JSON.stringify(state.settings));
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        function setupInteractions() {
+            let lastTap = 0;
+            let count = 0;
+            const head = document.getElementById('triggerHeader');
+
+            head.addEventListener('click', (e) => {
+                const now = Date.now();
+                if (now - lastTap < 400) count++;
+                else count = 1;
+                lastTap = now;
+
+                if (count === 2) document.getElementById('settingsModal').style.display = 'flex';
+                if (count === 3) document.getElementById('logModal').style.display = 'flex';
+            });
+
+            document.getElementById('expirySlider').oninput = function() {
+                document.getElementById('durationLabel').innerText = this.value;
+                state.settings.duration = parseInt(this.value);
+                localStorage.setItem('forensic_settings', JSON.stringify(state.settings));
+            };
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
+
