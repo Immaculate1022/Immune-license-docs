@@ -3,7 +3,7 @@
 **A global immune system for endpoints. Free, real-time, behavioral defense against ransomware.**
 
 Copyright 2026 Gregory Scott Davis  
-Licensed under IOF Attribution License v1.0](./LICENSE)
+Licensed under [IOF Attribution License v1.0](./LICENSE)
 
 ---
 
@@ -34,6 +34,16 @@ Result: Patient Zero loses files. Patient Two loses nothing.
 
 ## Components
 
+### IOF Resonance Production Enterprise System v4.0
+The `iof_resonance_production.py` script is a complete production-ready system featuring:
+- **CI/CD Pipelines**: Automated GitHub Actions and GitLab CI workflows.
+- **Monitoring**: Integrated Prometheus and Grafana configurations for real-time telemetry.
+- **Cost Optimization**: Intelligent resource allocation and spot instance strategies.
+- **SLA Tracking**: Automated violation detection and compliance reporting.
+
+### Topographic Peak Ascent
+The `TopographicPeakAscent.jsx` component implements an enhanced topological memory bank with peak detection. It enables the AI to visualize the resonance landscape and actively navigate toward optimal summits.
+
 ### IOF Resonance Visualization
 A web-based dashboard (`index.html` & `IOF_Resonance_Complete.jsx`) providing a real-time, physics-driven visualization of topological manifold resonance and signal integrity.
 
@@ -59,6 +69,8 @@ A conceptual brief (`docs/ExecutiveWhitePaper.md`) for investors and engineers, 
 ├── index.html              # IOF Resonance Web Visualization (Entry)
 ├── IOF_Resonance_Complete.jsx # IOF Resonance Dashboard (React)
 ├── IOFv3Dashboard.jsx      # Station 2 Flux Dashboard (React)
+├── TopographicPeakAscent.jsx # Topological Peak Ascent Optimizer (React)
+├── iof_resonance_production.py # Enterprise Production System (Python)
 ├── LICENSE                 # IOF Attribution License v1.0
 ├── README.md               # Project overview and quickstart
 └── .gitignore              # Standard ignore rules
@@ -69,5 +81,5 @@ A conceptual brief (`docs/ExecutiveWhitePaper.md`) for investors and engineers, 
 ```bash
 git clone https://github.com/Immaculate1022/Immune-license-docs.git
 cd Immune-license-docs
-# To use the dashboard, import IOFv3Dashboard into your React app
+# To use the dashboard, import components into your React app
 ```
