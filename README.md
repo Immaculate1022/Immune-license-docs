@@ -53,6 +53,7 @@ npx serve .
 *   **[Technical Brief: Analysis of IOF Core and Photonic AI Deployment](docs/TechnicalBrief_PhotonicAI.md)**: An in-depth analysis of the `iof_core` framework, TFLN manifolds, Mobius topology, and Photonic Standing Waves.
 *   **[AI Collaboration Case Study](docs/AI_Collaboration_Case_Study.md)**: A chronicle of the collaborative development, detailing the iterative process between human architect Gregory Scott Davis and multiple AI models.
 *   **[Topological Optimization & Emergency Recovery Logic](docs/TopologicalOptimizationLogic.md)**: A deep dive into the conceptual framework of self-healing systems and state reversion.
+*   **[Sovereign Reality Engine Whitepaper](docs/SovereignRealityEngine_Whitepaper.md)**: A whitepaper proposing a paradigm shift from governance as policy to governance as a physical constant, integrating TFLN photonics, Graphene Aerogel, and Piezo-Quartz triggers.
 
 ---
 
@@ -65,6 +66,7 @@ npx serve .
 ├── docs/                   # Technical documentation and licenses
 │   ├── AI_Collaboration_Case_Study.md
 │   ├── CosmologicalBridge.md
+│   ├── SovereignRealityEngine_Whitepaper.md
 │   ├── TechnicalBrief_PhotonicAI.md
 │   └── TopologicalOptimizationLogic.md
 ├── index.html              # IOF Resonance Web Visualization (Entry)
