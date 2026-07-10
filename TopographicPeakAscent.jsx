@@ -2,7 +2,6 @@
 // ENHANCED TOPOLOGICAL MEMORY WITH PEAK DETECTION
 // ============================================
 
-
 class TopologicalMemoryBank {
   constructor(maxEntries = 10, decayRate = 0.01) {
     this.states = [];
@@ -12,9 +11,7 @@ class TopologicalMemoryBank {
     this.peakCache = new Map(); // Cache of detected peaks in phi space
   }
 
-
   // ... (previous methods remain)
-
 
   // Find nearby peak in topological landscape
   findNearbyPeak(currentPhi, threshold = 0.1) {
@@ -33,7 +30,6 @@ class TopologicalMemoryBank {
     );
   }
 
-
   // Find the global maximum in the topological landscape
   findGlobalPeak() {
     if (this.states.length === 0) return null;
@@ -41,7 +37,6 @@ class TopologicalMemoryBank {
       curr.q > best.q ? curr : best
     );
   }
-
 
   // Calculate gradient direction toward nearest peak
   calculateGradient(currentPhi) {
@@ -53,18 +48,15 @@ class TopologicalMemoryBank {
   }
 }
 
-
 // ============================================
 // ENHANCED REASONING WITH TOPOGRAPHIC ASCENT
 // ============================================
-
 
 function reasonWithMemory(arch, photonic, history, step, topologicalMemory, nodes) {
   const bestState = topologicalMemory.getBestState();
   const recentStates = topologicalMemory.getRecentStates(3);
   const resonance = photonic.resonance;
   const qFactor = photonic.qFactor;
-
 
   // ===== TOPOGRAPHIC ASCENT =====
   // Look for higher elevation peaks to climb
@@ -84,7 +76,6 @@ function reasonWithMemory(arch, photonic, history, step, topologicalMemory, node
     };
   }
 
-
   // ===== PREDICTIVE THERMAL SHUNTING =====
   const projectedNodes = getProjectedState(nodes, 15);
   const futureThermalRisk = Object.values(projectedNodes).some(p => Math.abs(p.error) > 0.8);
@@ -102,7 +93,6 @@ function reasonWithMemory(arch, photonic, history, step, topologicalMemory, node
       action: "shunt"
     };
   }
-
 
   // ===== STANDARD MEMORY RECALL =====
   if (resonance < 0.6 && bestState) {
@@ -151,11 +141,9 @@ function reasonWithMemory(arch, photonic, history, step, topologicalMemory, node
   return null;
 }
 
-
 // ============================================
 // TOPOGRAPHIC VISUALIZATION COMPONENT
 // ============================================
-
 
 function TopographicAscentIndicator({ currentPhi, targetPhi, gradient, peakHeight }) {
   const progress = targetPhi ? 
@@ -203,11 +191,9 @@ function TopographicAscentIndicator({ currentPhi, targetPhi, gradient, peakHeigh
   );
 }
 
-
 // ============================================
 // ENHANCED 3D TOPOGRAPHY WITH ASCENT PATH
 // ============================================
-
 
 function AcousticTopographyWithAscent({ nodes, coherence, currentPhi, targetPhi, onPeakDetect }) {
   const canvasRef = React.useRef();
@@ -409,11 +395,9 @@ function AcousticTopographyWithAscent({ nodes, coherence, currentPhi, targetPhi,
   );
 }
 
-
 // ============================================
 // MAIN DASHBOARD WITH TOPOGRAPHIC ASCENT
 // ============================================
-
 
 function PhotonicDashboardWithTopographicAscent() {
   const [memoryBank] = React.useState(() => new TopologicalMemoryBank());
@@ -604,7 +588,6 @@ function PhotonicDashboardWithTopographicAscent() {
     </div>
   );
 }
-
 
 export {
   TopologicalMemoryBank,
